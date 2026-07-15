@@ -1,0 +1,72 @@
+# ============================================================
+#  AEF-Population-Prediction .gitignore
+#  策略:只追踪「代码」+「处理后的 15MSA 特征数据」
+#  原始大数据、汇报文档、矢量/栅格原始文件一律不进仓库
+# ============================================================
+
+# ---- 汇报 / 说明文档(内容已整理进 README) ----
+*.pptx
+*.ppt
+*.pdf
+*.docx
+*.doc
+*.xls
+*.xlsx
+
+# ---- 原始 MSA 数据(边界矢量 / census 原始下载) ----
+MSA/MSA原始数据/
+
+# ---- 矢量 shapefile 组件 ----
+*.shp
+*.shx
+*.dbf
+*.prj
+*.cpg
+*.sbn
+*.sbx
+
+# ---- ArcGIS 临时锁文件 ----
+*.lock
+*.sr.lock
+
+# ---- 压缩包 ----
+*.zip
+*.7z
+*.rar
+*.gz
+*.tar
+
+# ---- 栅格 / 大型地理原始数据(如日后放入) ----
+*.tif
+*.tiff
+*.img
+*.hdf
+*.nc
+
+# ---- CSV:默认忽略所有,再放行处理后的特征表 ----
+# 原始/中间的全国 tract 级 CSV(如 *_tract.csv、nhgis0001*)体积大且部分禁止再分发
+# 注意:gitignore 不支持行内注释,放行规则必须独占一行
+*.csv
+# 15 个 MSA 的最终特征表(任意目录)
+!*_15msa.csv
+# 合并后的特征数据集
+!GIS-feature-dataset/*.csv
+# 15MSA 筛选结果 / 人口标签
+!MSA/15MSA/*.csv
+
+# ---- Python ----
+__pycache__/
+*.py[cod]
+.ipynb_checkpoints/
+.venv/
+venv/
+env/
+.env
+
+# ---- 系统 ----
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# ---- 工具配置(非项目内容) ----
+.claude/

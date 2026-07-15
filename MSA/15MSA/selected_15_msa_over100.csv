@@ -1,0 +1,16 @@
+﻿rank,rank_100,cbsa_code,cbsa_title,population_2020,n_tracts,n_counties,n_missing_counties,missing_fips,group
+1,1,35620,"New York-Newark-Jersey City, NY-NJ-PA",19261570,4953,23,0,,high
+3,3,16980,"Chicago-Naperville-Elgin, IL-IN-WI",9478801,2335,14,0,,high
+9,9,12060,"Atlanta-Sandy Springs-Alpharetta, GA",5947008,1500,29,0,,high
+42,42,36420,"Oklahoma City, OK",1397040,419,7,0,,high
+49,49,25540,"Hartford-East Hartford-Middletown, CT",1205842,308,3,0,,high
+58,58,14860,"Bridgeport-Stamford-Norwalk, CT",944306,227,1,0,,medium
+64,64,10580,"Albany-Schenectady-Troy, NY",880766,251,5,0,,medium
+65,65,28940,"Knoxville, TN",861872,225,8,0,,medium
+67,67,12940,"Baton Rouge, LA",856779,215,10,0,,medium
+97,97,27140,"Jackson, MS",596287,160,7,0,,medium
+103,103,29620,"Lansing-East Lansing, MI",547786,154,4,0,,low
+104,104,33700,"Modesto, CA",546235,112,1,0,,low
+134,132,23060,"Fort Wayne, IN",409419,104,2,0,,low
+146,141,33860,"Montgomery, AL",373552,112,4,0,,low
+171,145,20260,"Duluth, MN-WI",289276,104,4,0,,low
