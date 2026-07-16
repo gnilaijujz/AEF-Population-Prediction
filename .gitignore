@@ -88,3 +88,10 @@ data_AEF/**/*.crdownload
 data_GIS/**/*.crdownload
 data_AEF/**/*.folderdownload
 data_GIS/**/*.folderdownload
+
+# ---- model/:整体入库(代码 + 输入 + 结果 + 迁移矩阵) ----
+# 覆盖上面的 *.csv 忽略,把 model 下所有内容放行
+!model/**
+# 但仍排除 Python 缓存
+model/**/__pycache__/
+model/**/*.pyc
