@@ -78,3 +78,13 @@ desktop.ini
 
 # ---- 工具配置(非项目内容) ----
 .claude/
+
+# ---- data_AEF / data_GIS:整体入库(per-MSA AEF/GIS 数据 + 边界 shapefile) ----
+# 覆盖上面按扩展名的忽略规则,把这两个目录整体放行
+!data_AEF/**
+!data_GIS/**
+# 但仍排除未下载完成的半成品(放在放行之后,优先级更高)
+data_AEF/**/*.crdownload
+data_GIS/**/*.crdownload
+data_AEF/**/*.folderdownload
+data_GIS/**/*.folderdownload
