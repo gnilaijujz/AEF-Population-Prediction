@@ -18,12 +18,20 @@ MSA/MSA原始数据/
 
 # ---- 矢量 shapefile 组件 ----
 *.shp
+*.shp.xml
 *.shx
 *.dbf
 *.prj
 *.cpg
 *.sbn
 *.sbx
+
+# ---- 未下载完成的临时文件 ----
+*.crdownload
+*.folderdownload
+*.crdownload.folderdownload
+*.part
+*.tmp
 
 # ---- ArcGIS 临时锁文件 ----
 *.lock
