@@ -30,3 +30,40 @@
 - `source_visualize.py` **不能独立运行**:它依赖在同一 Python 会话中先跑 `quantify_domain_shift_regression.py` 后留下的 `df_clean` / `model_clean` / `city_stats` 变量。
 
 复现前请对照各脚本顶部的路径常量,按实际输出目录调整。
+
+## 结果图示
+
+**跨城迁移矩阵(校准后,行=源城、列=目标城)**
+
+真实 GNN 迁移:剔除 IQR 异常(白色)后均值回升至 +0.286。
+
+![GNN 校准迁移矩阵](../../figures/transfer_matrix_gnn.png)
+
+零模型(打乱特征)校准迁移:校准后整体 ≈0,印证真实迁移信号并非输出偏置所致。
+
+![null 校准迁移矩阵](../../figures/transfer_matrix_null.png)
+
+**域偏移 → 迁移性能**
+
+L2 嵌入距离 vs 校准后 R²:线性拟合斜率 −0.019(p<0.001,R²=0.109),距离越大迁移越差。
+
+![L2 域偏移回归](../../figures/domain_shift_L2.png)
+
+四种距离(L1 / L2 / 余弦 / MMD)与迁移 R² 的 Spearman 相关(L1、L2 显著负相关):
+
+![距离-性能相关](../../figures/distance_correlation.png)
+
+MMD 距离归因(散点 + 残差):
+
+![MMD 归因](../../figures/domain_shift_MMD.png)
+
+**分源城市分析**
+
+按源城市分组的"域偏移→迁移性能"回归(不同源城斜率各异):
+
+![分源回归](../../figures/source_wise_regression.png)
+
+由源域本征特征距离预测的迁移 R² vs 实际迁移 R²:
+
+![实际 vs 预测](../../figures/predicted_vs_actual.png)
+
