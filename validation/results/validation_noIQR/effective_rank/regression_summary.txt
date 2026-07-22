@@ -1,0 +1,30 @@
+                            OLS Regression Results                            
+==============================================================================
+Dep. Variable:                avg_CDS   R-squared:                       0.095
+Model:                            OLS   Adj. R-squared:                  0.025
+Method:                 Least Squares   F-statistic:                     1.360
+Date:                Tue, 21 Jul 2026   Prob (F-statistic):              0.265
+Time:                        18:34:10   Log-Likelihood:                 13.426
+No. Observations:                  15   AIC:                            -22.85
+Df Residuals:                      13   BIC:                            -21.44
+Df Model:                           1                                         
+Covariance Type:            nonrobust                                         
+==================================================================================
+                     coef    std err          t      P>|t|      [0.025      0.975]
+----------------------------------------------------------------------------------
+const              0.2392      0.118      2.019      0.065      -0.017       0.495
+effective_rank    -0.0077      0.007     -1.166      0.265      -0.022       0.007
+==============================================================================
+Omnibus:                        4.961   Durbin-Watson:                   2.105
+Prob(Omnibus):                  0.084   Jarque-Bera (JB):                2.364
+Skew:                           0.892   Prob(JB):                        0.307
+Kurtosis:                       3.772   Cond. No.                         78.0
+==============================================================================
+
+Notes:
+[1] Standard Errors assume that the covariance matrix of the errors is correctly specified.
+
+Regression equation: avg_CDS = -0.007674 * effective_rank + 0.239184
+RMSE on new cities: 0.2098
+MAE on new cities:  0.1711
+Pearson correlation: 0.4538

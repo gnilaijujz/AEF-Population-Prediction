@@ -1,0 +1,38 @@
+                            OLS Regression Results                            
+==============================================================================
+Dep. Variable:                avg_CDS   R-squared:                       0.017
+Model:                            OLS   Adj. R-squared:                 -0.059
+Method:                 Least Squares   F-statistic:                    0.2250
+Date:                Tue, 21 Jul 2026   Prob (F-statistic):              0.643
+Time:                        19:10:28   Log-Likelihood:                 12.809
+No. Observations:                  15   AIC:                            -21.62
+Df Residuals:                      13   BIC:                            -20.20
+Df Model:                           1                                         
+Covariance Type:            nonrobust                                         
+==============================================================================
+                 coef    std err          t      P>|t|      [0.025      0.975]
+------------------------------------------------------------------------------
+const          0.1387      0.077      1.802      0.095      -0.028       0.305
+isotropy   -1.213e+06   2.56e+06     -0.474      0.643   -6.74e+06    4.31e+06
+==============================================================================
+Omnibus:                        2.202   Durbin-Watson:                   2.417
+Prob(Omnibus):                  0.332   Jarque-Bera (JB):                0.612
+Skew:                           0.411   Prob(JB):                        0.736
+Kurtosis:                       3.550   Cond. No.                     8.95e+07
+==============================================================================
+
+Notes:
+[1] Standard Errors assume that the covariance matrix of the errors is correctly specified.
+[2] The smallest eigenvalue is 1.87e-15. This might indicate that there are
+strong multicollinearity problems or that the design matrix is singular.
+
+Regression equation: avg_CDS = -1212682.376387 * isotropy + 0.138732
+Excluded new cities: ['Syracuse_NY', 'Milwaukee']
+RMSE on remaining new cities: 0.1502
+MAE on remaining new cities:  0.1068
+Pearson correlation: -0.5226
+Q^2 (external R^2): -1.2011
+Calibration slope: NaN (ideal=1)
+Calibration intercept: NaN (ideal=0)
+Bias: 0.0993
+Generalization gap (Train R^2 - Q^2): 1.2182

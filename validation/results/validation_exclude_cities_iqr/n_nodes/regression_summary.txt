@@ -1,0 +1,37 @@
+                            OLS Regression Results                            
+==============================================================================
+Dep. Variable:                avg_CDS   R-squared:                       0.021
+Model:                            OLS   Adj. R-squared:                 -0.077
+Method:                 Least Squares   F-statistic:                    0.2114
+Date:                Wed, 22 Jul 2026   Prob (F-statistic):              0.656
+Time:                        09:21:53   Log-Likelihood:                 12.937
+No. Observations:                  12   AIC:                            -21.87
+Df Residuals:                      10   BIC:                            -20.90
+Df Model:                           1                                         
+Covariance Type:            nonrobust                                         
+==============================================================================
+                 coef    std err          t      P>|t|      [0.025      0.975]
+------------------------------------------------------------------------------
+const          0.1653      0.062      2.668      0.024       0.027       0.303
+n_nodes       -0.0001      0.000     -0.460      0.656      -0.001       0.000
+==============================================================================
+Omnibus:                        7.647   Durbin-Watson:                   2.090
+Prob(Omnibus):                  0.022   Jarque-Bera (JB):                3.632
+Skew:                           1.234   Prob(JB):                        0.163
+Kurtosis:                       4.083   Cond. No.                         522.
+==============================================================================
+
+Notes:
+[1] Standard Errors assume that the covariance matrix of the errors is correctly specified.
+
+Regression equation: avg_CDS = -0.000130 * n_nodes + 0.165253
+Excluded new cities: ['Las_Vegas', 'Syracuse_NY']
+IQR multiplier: 1.5
+RMSE on remaining new cities: 0.1930
+MAE on remaining new cities:  0.1690
+Pearson correlation: 0.9037
+Q^2 (external R^2): -1.8707
+Calibration slope: 4.3622 (ideal=1)
+Calibration intercept: -0.6148 (ideal=0)
+Bias: 0.1690
+Generalization gap (Train R^2 - Q^2): 1.8914

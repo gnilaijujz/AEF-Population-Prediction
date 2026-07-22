@@ -1,174 +1,254 @@
-# 面向人口预测任务的地理空间基础模型空间可迁移能力评估
+﻿# AEF Population Prediction
 
-**Evaluating the Spatial Transferability of a Geospatial Foundation Model (AEF) for Population Prediction**
+本项目围绕 **AlphaEarth Foundations (AEF) 地理空间基础模型表征在 tract 级人口预测中的跨城市空间可迁移能力** 展开。项目并不只评价某一个城市内的拟合精度，而是把重点放在三个连续问题上：
 
-> 以美国大都市统计区(MSA)的人口估计为下游任务,评估 Google DeepMind **AlphaEarth Foundations (AEF)** 卫星嵌入的空间可迁移能力,并与传统 GIS 特征对比,归因人口预测误差的空间不均匀性。
+1. AEF embedding 是否包含与人口密度相关的空间语义信息？
+2. 在一个 MSA 训练得到的模型，能否迁移到未见过的 MSA？
+3. 迁移成功或失败能否被 domain shift、源域结构特征和 tract 级误差机制解释？
 
-- 指导老师:周智勇
-- 组长:李书亦　组员:刘桂心瑜、于佳灵
+最终版结题汇报位于：
 
----
+- `结题.pptx`：根目录副本，作为项目说明入口。
+- `docs/report_materials/结题.pptx`：报告材料归档副本。
+- `docs/final_report_summary.md`：与最终 PPT 同步的文字版研究总结。
 
-## 1. 研究背景与科学问题
+## Research Design
 
-当前地理空间基础模型(GeoFM)研究重「外部评估」、缺「内部评估」;AEF 对人口估计的提升在**空间与尺度上并不均匀**。本研究以人口估计为下游任务,系统评估 AEF 的空间可迁移能力。
+| 模块 | 设计 |
+| --- | --- |
+| 下游任务 | 2020 年美国 MSA 内 census tract 级人口密度预测 |
+| 核心表征 | AlphaEarth Foundations Satellite Embedding，64 维，10 m，2020 年度 |
+| 人口标签 | ACS B01003 总人口，按 tract 面积换算人口密度，并使用 `log1p` 缓解长尾 |
+| 建模单元 | 15 个美国 MSA，11,179 个 census tract，覆盖约 43.6M 人口 |
+| 图结构 | Queen contiguity，tract 共享边界或顶点即连边 |
+| 主模型 | 2-layer GraphSAGE，mean aggregation，hidden size 64，dropout 0.5 |
+| 训练划分 | city 内 train/val/test = 70/15/15 |
+| 迁移评估 | source MSA 训练，target MSA 直接测试，构建 15 x 15 迁移矩阵 |
+| 外部验证 | 新增 15 个 MSA 数据，用于验证源域结构指标的跨域排序能力 |
 
-**三个研究问题:**
-1. AEF 是否具有进行人口预测的能力?
-2. AEF 与传统 GIS 数据在不同城市之间的可迁移性如何?
-3. 模型迁移能力与数据特征距离是否存在相关性?
+## Data System
 
-**三个任务:**
+本项目把数据明确分为三类：原始/整理后输入数据、模型可直接读取的数据、实验输出结果。
 
-| 任务 | 内容 | 方法 | 产出 |
-|------|------|------|------|
-| **任务一 · 特征工程对照** | 三组特征对比:① 仅 AEF　② 仅 GIS　③ AEF+GIS 融合 | 解码器 GNN(GraphSAGE)/ MLP,备选 Ridge / RF | R² / RMSE / MAE / KL;空间误差地图、残差 LISA |
-| **任务二 · 可迁移性** | 15×15 全连接迁移矩阵,每对 (source→target) 评估迁移性 | 域偏移量化(AEF 嵌入距离 L1/L2/余弦/MMD + GIS 特征距离);回归「特征距离 → 迁移性能」 | N×N 迁移矩阵;验证「距离越大,迁移越差」 |
-| **任务三 · 归因 + 验证** | 迁移性能(因变量)~ AEF 本征属性(Moran's I / Shannon 熵 / 余弦 / KL) | 多变量回归(R²>0.7 支持"本征可迁移性假设");变换 CV 策略、Moran's I / LISA;按高/中/低特征距离选 MSA 外部验证 | 归因模型;系统偏差 vs 验证误差的分离 |
+| 路径 | 作用 |
+| --- | --- |
+| `data_sources/raw_gis_features/` | 下载的传统 GIS 特征库，包括建成环境、自然环境、社会经济与人口结构相关材料。 |
+| `data_sources/processed_aef/` | 整理好的 AEF 输入数据，按 MSA 保存 shapefile 组件与 AEF CSV。 |
+| `data_sources/processed_gis/` | 整理好的 GIS 输入数据，按 MSA 保存 shapefile 组件与 GIS CSV。 |
+| `data_sources/newyork_timeline/` | 纽约时间维度数据，当前作为后续时空扩展材料保留。 |
+| `data_sources/validation_new_msa/` | 外部验证使用的新 15 个 MSA 数据。 |
+| `data_sources/msa_reference/` | MSA 边界、tract 边界、ACS 人口标签与样本选择参考数据。 |
+| `model_data/aef_root/` | 模型实际读取的派生 shapefile/CSV 输入树，包括 AEF、GIS 和 AEF+GIS 配置。 |
 
-> 建模实现见 [`model/`](model/):解码器每城自训练后做跨城迁移,再由 `Analysis/` 归因。城内采用随机 70/15/15 划分,跨城泛化由迁移脚本单独评估(整个目标城当测试集)。
+### GIS Feature Set
 
----
+GIS 特征不是简单堆叠，而是按“多维正交、少冗余、防目标泄漏、与 AEF 互补”的原则筛选。核心实验使用 9 个变量覆盖 8 类城市维度。
 
-## 2. 研究区与研究单元
+| 城市维度 | 核心变量 | 含义 |
+| --- | --- | --- |
+| 建成强度 | `impervious_mean` | NLCD 不透水面比例，刻画城市化开发强度。 |
+| 居住/就业容量 | `building_density` | OSM 建筑轮廓密度，刻画建成空间承载能力。 |
+| 功能强度 | `poi_total_all` | OSM 综合 POI 密度，刻画功能活跃度。 |
+| 功能构成 | `poi_diversity` | 7 类 POI 的 Shannon 混合熵，刻画城市功能类型差异。 |
+| 活动强度 | `ntl_sum` | VIIRS 夜间灯光总光量。 |
+| 网络连通 | `road_density_local` | TIGER/Line 地方道路密度。 |
+| 植被本底 | `ndvi_mean` | Landsat 年度 NDVI 均值。 |
+| 地形与区位 | `slope_mean`, `dist_water_m` | USGS 坡度和 JRC 水体距离，刻画开发约束与滨水区位。 |
 
-- **研究单元:** Census Tract(普查区,约 1,200–8,000 人,理想约 4,000 人)
-- **人口标签:** 美国官方统计数据(Census Bureau / ACS 表 `B01003`,`Estimate!!Total`);因 WorldPop(~1km)分辨率不足以支撑 tract 级预测,改用官方统计口径
-- **抽样:** 从筛选出 tract 数 > 100 的 MSA 中,按人口分**高 / 中 / 低**三层随机抽样,得到 **15 个 MSA**
+社会经济和人口结构变量与 ACS/Census 标签来源高度相关，容易造成目标泄漏，因此没有纳入核心 GIS 特征组。
 
-| 层级 | MSA(CBSA) | 2020 人口 | tract 数 |
-|------|-----------|-----------|---------|
-| high | New York-Newark-Jersey City, NY-NJ-PA (35620) | 19,261,570 | 4,953 |
-| high | Chicago-Naperville-Elgin, IL-IN-WI (16980) | 9,478,801 | 2,335 |
-| high | Atlanta-Sandy Springs-Alpharetta, GA (12060) | 5,947,008 | 1,500 |
-| high | Oklahoma City, OK (36420) | 1,397,040 | 419 |
-| high | Hartford-East Hartford-Middletown, CT (25540) | 1,205,842 | 308 |
-| medium | Bridgeport-Stamford-Norwalk, CT (14860) | 944,306 | 227 |
-| medium | Albany-Schenectady-Troy, NY (10580) | 880,766 | 251 |
-| medium | Knoxville, TN (28940) | 861,872 | 225 |
-| medium | Baton Rouge, LA (12940) | 856,779 | 215 |
-| medium | Jackson, MS (27140) | 596,287 | 160 |
-| low | Lansing-East Lansing, MI (29620) | 547,786 | 154 |
-| low | Modesto, CA (33700) | 546,235 | 112 |
-| low | Fort Wayne, IN (23060) | 409,419 | 104 |
-| low | Montgomery, AL (33860) | 373,552 | 112 |
-| low | Duluth, MN-WI (20260) | 289,276 | 104 |
+## Methodology
 
----
+### 1. In-City Prediction
 
-## 3. 数据
+每个 MSA 内使用 AEF/GIS/AEF+GIS 特征训练人口密度模型，检验 AEF embedding 是否包含人口相关空间表征。典型参数如下：
 
-### 3.1 AEF 嵌入(核心数据)
+| 参数 | 取值 |
+| --- | --- |
+| GNN architecture | 2-layer GraphSAGE |
+| Aggregation | Mean aggregation |
+| Hidden dimension | 64 |
+| Dropout | 0.5 |
+| Batch size | 64 |
+| Optimizer | Adam |
+| Learning rate | 0.001 |
+| Epochs | 500 |
+| Target transform | `log1p(population_density)` |
 
-**AlphaEarth Foundations Satellite Embedding**(Google & Google DeepMind),经 Google Earth Engine 获取。提取 2020 年 AEF 影像,与各 MSA 的普查区边界叠加,对每个普查区内所有 10m 像素取平均,得到每区域 **64 维**特征向量,导出 CSV。
+### 2. Cross-City Transferability
 
-- 规格:64 维 · 10m · 年度(2017–2024,本研究用 2020)
-- 预处理:尺度对齐到普查单元;AEF 暂不标准化;人口长尾则 log 变换;稀疏区 mask
+跨城市迁移以 source-target 城市对为单位：
 
-### 3.2 传统 GIS 特征目录
+1. 在 source MSA 上训练模型。
+2. 将训练好的模型直接应用到 target MSA。
+3. 记录 RMSE、MAE、R2、MAPE、Pearson r。
+4. 使用熵权法合成综合性能分数。
+5. 用 `CDS = Score_source - Score_cross` 表示跨域稳定性损失。
 
-所有特征均聚合到 census tract 级,连接键统一为 `cb_2020_3`(`1400000US` + 11 位 tract 码),原始值输出、标准化交统一建模流程。
+`avg_CDS` 是同一 source 对其它 target 的平均迁移损失；值越低，说明该 source 越适合作为“good teacher”。
 
-**第一块 · 社会经济**
+AEF 配置下熵权法权重如下：
 
-| 特征组 | 文件 | 主要字段 | 来源 / 尺度 / 时间 |
-|--------|------|----------|-------------------|
-| 人口结构 | `pop_features_15msa.csv` | `minor_ratio`(未成年占比)、`elderly_ratio`(老年占比)、`sex_ratio`(男/女×100) | ACS 5-year 2016–2020,表 DP05 |
-| 收入 / 贫困 | `socioeconomic_features_15msa.csv` | 家庭收入 5 档户数、`median_family_income`、`per_capita_income`、`persons_below_poverty`(+ `*_moe`) | IPUMS NHGIS(底层 ACS 5yr 2016–2020,表 A88/AB2/BD5/CL6) |
+| 指标 | 权重 |
+| --- | ---: |
+| `rmse_raw` | 0.233 |
+| `mae_raw` | 0.192 |
+| `r2_raw` | 0.048 |
+| `mape_raw` | 0.066 |
+| `r_raw` | 0.462 |
 
-**第二块 · 人类活动与建成环境**
+### 3. Domain Shift Attribution
 
-| 特征组 | 文件 | 主要字段 | 来源 / 分辨率 / 时间 |
-|--------|------|----------|---------------------|
-| 土地覆盖 | `nlcd_features_15msa.csv` | 10 类 `*_pct` 面积占比 + `impervious_mean`(不透水面) | Annual NLCD 2020(MRLC),30m |
-| 夜间灯光 | `ntl_features_15msa.csv` | `ntl_sum/mean/intensity_per_km2/std/cv/max/min/count` | VIIRS Nighttime Lights Annual V2 (masked) 2020,~500m |
-| 建筑 | `building_features_15msa.csv` | `building_count`、`building_area_m2`、`building_density`、`coverage_ratio` | OpenStreetMap 建筑轮廓,经 ohsome API,2020 |
-| POI | `poi_features_15msa.csv` | `poi_edu/comm/med/trans/pub/food/finance`、`poi_total_all`、`poi_diversity` | OpenStreetMap,2020 |
-| 道路 | `road_features_15msa.csv` | `road_len_total_m`、`road_density_local/secondary` | Census TIGER,2020 |
-| 景观格局 | `landscape_indices_tract_*.csv`(per-MSA,待合并) | 景观格局指数 | 基于土地覆盖栅格 |
+domain shift 用于解释城市间迁移性能差异。项目计算多类距离：
 
-**第三块 · 地理与环境**
+| 类型 | 指标 |
+| --- | --- |
+| 一阶矩距离 | L1 distance, L2 distance |
+| 二阶矩距离 | CORAL |
+| 分布距离 | MMD, KL divergence |
+| 图拓扑距离 | Spectral distance, Degree difference |
+| 综合指数 | CDSI，使用熵权法融合多维距离 |
 
-| 特征组 | 文件 | 主要字段 | 来源 / 分辨率 / 时间 |
-|--------|------|----------|---------------------|
-| 地形 | `dem_features_15msa.csv` | `elev_mean`(高程)、`slope_mean`(坡度) | USGS 3DEP(经 GEE,~10m 取样至 30m) |
-| 植被 | `ndvi_features_15msa.csv` | `ndvi_mean` | Landsat C2 T1 L2 年度 NDVI 合成(GEE),30m,2020 |
-| 树冠 | `tcc_features_15msa.csv` | `tcc_mean`(树冠覆盖率) | USFS/NLCD Tree Canopy Cover(GEE),30m,2020 |
-| 水体距离 | `water_dist_features_15msa.csv` | `dist_water_m`(到最近水体平均距离) | JRC Global Surface Water v1.4(GEE),30m,2020 |
+AEF+GIS 配置中进一步拆解 `AEF_L2`、`GIS_L2`、`Weighted_L2` 和 `Label_Shift`，用 OLS、单变量回归、AIC 向前选择和分层进入策略评估边际解释力。
 
-> 每个特征目录下都有一份 `README.md`(由对应 `*_数据说明.docx` 整理生成),含完整字段口径、处理方法与来源引用。
+### 4. Source-Domain Health Metrics
 
-各特征(含社会经济/建成环境/地理环境)之间的相关性:
+为了低成本预判一个源城市是否适合迁移，本项目计算源域结构指标：
 
-![特征相关性热图](figures/feature_correlation.png)
+| 指标 | 含义 |
+| --- | --- |
+| `n_nodes` | 源城市 tract 节点数，近似反映城市样本规模。 |
+| `neighbor_consistency` | 邻接 tract 标签平滑性。 |
+| `effective_rank` | embedding 表征有效秩。 |
+| `isotropy` | embedding 空间各向同性。 |
+| `inter_intra_ratio` | 类间/类内差异比例。 |
+| `pca_5_explained` | 前 5 主成分累计解释率。 |
+| `embedding_diversity` | embedding 多样性指标。 |
 
----
+## Key Results
 
-## 4. 仓库结构
+### AEF Can Predict Population, But Transfer Is Uneven
 
+城市内 self-training 结果表明，AEF embedding 确实包含人口相关空间信息。例如在 AEF 配置下，Albany_S、Baton、Bridgeport 的 self-test R2 分别约为 0.800、0.747、0.712。然而同一模型跨城市迁移时表现明显不均衡，说明“能拟合本地”不等于“能跨域泛化”。
+
+### Good Teachers And Poor Teachers
+
+AEF 配置下 `avg_CDS` 最低的源城市主要是 New York、Chicago、Atlanta、Bridgeport；迁移损失较高的源城市包括 Jackson_MS、Montgomery、Baton、Fort_wayne 等。
+
+| 配置 | 较优源城市，avg_CDS 越低越好 | 较差源城市 |
+| --- | --- | --- |
+| AEF | New York (-0.097), Chicago (-0.024), Atlanta (0.021), Bridgeport (0.052) | Jackson_MS (0.357), Montgomery (0.233), Baton (0.185) |
+| GIS | New York (0.062), Atlanta (0.093), Chicago (0.100), Bridgeport (0.130) | Jackson_MS (0.428), Knoxville (0.389), Duluth (0.312) |
+| AEF + 9 GIS | Chicago (0.071), New York (0.091), Bridgeport (0.098), Atlanta (0.111) | Jackson_MS (0.393), Knoxville (0.278), Montgomery (0.269) |
+| AEF + NDVI | New York (0.029), Chicago (0.032), Bridgeport (0.090), Atlanta (0.114) | Jackson_MS (0.257), Montgomery (0.221), Fort_wayne (0.216) |
+| AEF + slope | New York (0.044), Chicago (0.050), Bridgeport (0.099), Atlanta (0.106) | Jackson_MS (0.267), Montgomery (0.244), Duluth (0.218) |
+
+### GIS Features Are Useful Selectively, Not By Blind Stacking
+
+实验显示，传统 GIS 特征能提供解释维度，但全量堆叠 9 个 GIS 特征并不一定改善迁移泛化。PPT 中总结的核心判断是：
+
+- AEF 已经编码了一部分遥感可观测的地表形态信息，例如不透水面、NDVI、建筑密度等。
+- NDVI、slope、POI diversity 等单一 GIS 特征在部分配置中能提高源城市排序一致性。
+- 全量 AEF+9GIS 反而可能引入噪声维度，稀释 AEF 表征在 domain shift 度量中的主导信号。
+
+### Domain Shift Is Statistically Relevant But Not Sufficient
+
+domain shift 与迁移损失存在统计关系，但效应量有限。最终报告中的解释是：
+
+- `Label_Shift` 是迁移损失的重要来源，人口规模/标签分布差异不可忽略。
+- `AEF_L2` 在控制人口差异后仍有增量解释力。
+- `GIS_L2` 的边际贡献较小，说明 GIS 特征并非自动提升可迁移性解释。
+- MSA 级平均距离会压缩 tract 级局部失败机制，难以完整解释迁移成败。
+
+### Source Health Metrics Can Support Low-Cost Source Selection
+
+源域结构指标与 `avg_CDS` 的关系如下：
+
+| 指标 | R2 | p-value | 解释 |
+| --- | ---: | ---: | --- |
+| `n_nodes` | 0.466 | 0.005 | 城市样本规模与迁移稳定性关系最稳健。 |
+| `neighbor_consistency` | 0.271 | 0.047 | 邻域标签平滑性与迁移损失相关，但受异常城市影响。 |
+| `embedding_diversity` | 0.220 | 0.078 | 有一定解释力，但显著性不足。 |
+| `pca_5_explained` | 0.165 | 0.133 | 表征低维结构清晰度有弱相关。 |
+
+在剔除 New York 和 Duluth 两个极端异常城市后，`neighbor_consistency` 与迁移损失的关系增强到 R2 = 0.774，p = 0.0001。外部新城市验证中，精确数值预测并不稳定，但排序预测有价值：`n_nodes` 在新 MSA 上取得 Spearman rho = 0.709，p = 0.022。
+
+### Tract-Level Error Shows Concept Shift
+
+迁移失败不是纯粹的 `P(X)` feature shift。高误差 tract 在空间上集聚，并集中于若干 AEF cluster，特别是紧凑高密度建成区。相同 AEF 形态在不同城市对应不同人口密度，说明关键困难更接近 `P(Y|X)` 的 conditional/concept shift。
+
+## Figures
+
+以下图件来自项目输出，可作为阅读项目结论的入口。
+
+| Figure | What It Shows |
+| --- | --- |
+| ![Source ranking](paper_figures/figure4_embedding_health/figure4_panels/1_Avg_CDS_Ranking.png) | AEF 配置下各 source MSA 的平均迁移损失排序。 |
+| ![Cross config heatmap](paper_figures/cross_config/avg_CDS_heatmap_cross_config.png) | 不同 AEF/GIS 配置下 source city 排名与 avg_CDS 对比。 |
+| ![Ranking correlation](paper_figures/cross_config/ranking_correlation_matrix.png) | 不同特征配置下 source 排序的一致性。 |
+| ![AEF CDSI heatmap](results/domain_shift/aef/plots/CDSI_heatmap.png) | AEF 表征空间中的城市间综合 domain shift。 |
+| ![Distance correlation](paper_figures/cross_config/L2_distance_matrix_correlation.png) | 不同特征配置的 L2 domain-shift 矩阵相似性。 |
+| ![Neighbor consistency](results/embedding_health_analysis/neighbor_consistency_vs_CDS_noNY.png) | 源域邻居一致性与迁移损失关系。 |
+| ![External validation](validation/results/external_apply_iqr/all_features_external_apply_iqr.png) | 源域健康指标外推到新 MSA 的验证结果。 |
+| ![n_nodes validation](validation/results/final_evidence/n_nodes_vs_HGG.png) | 城市规模指标与外部迁移表现的证据图。 |
+
+## Repository Layout
+
+| Path | Purpose |
+| --- | --- |
+| `data_sources/` | 源数据与整理后输入数据，包括 AEF、GIS、MSA reference、新 MSA 验证数据和纽约时间维度数据。 |
+| `model_data/` | 模型可直接读取的派生数据和预训练模型权重。 |
+| `scripts/modeling/` | 主训练、回归、迁移实验脚本。 |
+| `scripts/analysis/` | domain shift、embedding health、回归解释和后处理分析脚本。 |
+| `scripts/figures/` | 论文/报告图件生成脚本。 |
+| `results/transfer_results/` | 原始迁移实验指标和矩阵。 |
+| `results/transferability/` | 熵权法综合得分、CDS 矩阵和迁移能力结果。 |
+| `results/domain_shift/` | AEF/GIS/domain-shift 距离矩阵与归因结果。 |
+| `validation/` | 新 MSA 外部验证数据、脚本和结果。 |
+| `paper_figures/` | 汇报/论文图件。 |
+| `docs/` | 项目文档、最终报告文字版、报告材料索引和整理记录。 |
+| `archive/` | 历史快照和非主流程材料。 |
+
+## Main Scripts
+
+从项目根目录运行脚本。主要入口包括：
+
+```powershell
+python scripts/modeling/GNN_regression.py --help
+python scripts/modeling/GNN_transfer_experiments_calibrated.py --help
+python scripts/modeling/GNN_transfer_GIS.py --help
+python scripts/modeling/MLP_regression.py --help
+python scripts/modeling/MLP_transfer.py --help
 ```
-AEF-Population-Prediction/
-├── README.md
-├── .gitignore
-├── data_AEF/                     # 纯 AEF 输入:每 MSA 的 64 维嵌入(aef_*_b*_2020.csv)+ 边界
-├── data_GIS/                     # 纯 GIS 输入:每 MSA 的 GIS 特征(gis_*_b0_2020.csv)+ 边界
-│   ├── create_dataset.ipynb      #   GIS 数据集构建流程
-│   └── feature_corr.ipynb        #   特征相关性分析
-├── MSA/                          # 研究区(见 MSA/README.md)
-│   └── 15MSA/                    #   高/中/低分层抽样脚本 + 15MSA 名单 / tract 清单 / 人口标签
-├── 传统GIS特征数据/               # 各特征的提取代码 + 每个数据集文件夹的 README
-│   ├── 15msa/                    #   处理后 15MSA 特征表(dem/ndvi/nlcd/poi/pop/socioeconomic/tcc/water/building/ntl/road)
-│   ├── 社会经济数据/              #   NHGIS / 人口结构
-│   ├── 人类活动和建成环境/         #   建筑 / POI / 土地覆盖 / 夜间灯光 / 道路 / 景观格局
-│   └── 地理数据和环境数据/         #   DEM / NDVI / 树冠 / 水体距离(GEE .js 脚本)
-└── model/                        # 建模、迁移与归因(见 model/README.md)
-    ├── GNN/                      #   GraphSAGE 自训练 + 跨城迁移
-    ├── MLP/                      #   MLP 自训练 + 迁移诊断(Ridge/null/校准/域距离)+ 输入数据
-    ├── Analysis/                 #   迁移矩阵分析、可视化、域偏移归因回归
-    └── AEF_plus_GIS/             #   AEF + 单个 GIS 特征的迁移实验结果
-```
 
-> **未入库内容**(见 `.gitignore`):census 原始下载、全国 tract 级中间 CSV、`nhgis0001*`(NHGIS 原始表禁止再分发)、汇报 PPT/PDF/Word、`.crdownload` 半成品。
-> **暂时移出**:合并数据集目录 `GIS-feature-dataset/`(整理后再放回;旧内容保留在 git 历史中)。
+常用分析脚本：
 
----
+| Script | Role |
+| --- | --- |
+| `scripts/analysis/transfer_domain/domain_shifting.py` | 基于嵌入和图结构计算 domain-shift 矩阵。 |
+| `scripts/analysis/transfer_domain/domain_shift_with_gis.py` | 拆分 AEF/GIS/label shift 并计算加权距离。 |
+| `scripts/analysis/embedding_health/embedding_health_analysis.py` | 分析源域嵌入健康度指标与迁移能力关系。 |
+| `scripts/figures/paper_figure4_and_cross_config/cross_config_analysis.py` | 跨配置 source ranking 和 transferability 对比图。 |
 
-## 5. 数据可用性与合规
+## Path Policy
 
-- ⚠️ **NHGIS 原始数据禁止再分发**:本仓库仅提供处理代码与来源说明,不包含 NHGIS 原始表(`nhgis0001*`)。请自行从 [data2.nhgis.org](https://data2.nhgis.org) 获取。
-- MSA 边界矢量:[TIGER/Line 2020 CBSA](https://www2.census.gov/geo/tiger/TIGER2020/CBSA/)
-- 人口标签:[Census Bureau Data](https://data.census.gov/)(表 B01003 / DP05)
-- 遥感与环境特征均可经 [Google Earth Engine](https://earthengine.google.com/) 复现(见各 `*_gee.js` 脚本)
+所有本地项目路径都以仓库根目录为基准写成相对路径，例如：
 
-**数据来源引用:**
-- IPUMS NHGIS, University of Minnesota, [www.nhgis.org](https://www.nhgis.org)
-- VIIRS Nighttime Lights Annual V2 (masked), Earth Observation Group, Colorado School of Mines
-- Pekel et al., 2016, *Nature*(JRC Global Surface Water)
-- USGS 3DEP;Annual NLCD (MRLC);USFS/NLCD Tree Canopy Cover;Landsat / OpenStreetMap
+| Purpose | Relative Path |
+| --- | --- |
+| ACS population CSV | `data_sources/msa_reference/raw_msa_data/ACSDT5Y2020.pop/ACSDT5Y2020.B01003-Data.csv` |
+| Main AEF inputs | `model_data/aef_root/clean_aef_shapefiles/` |
+| Main GIS inputs | `model_data/aef_root/clean_gis_shapefiles/` |
+| Pretrained GNN models | `model_data/pretrained_models/GNN/` |
+| Transferability outputs | `results/transferability/` |
+| External validation outputs | `validation/results/` |
 
----
+Google Earth Engine 标识符如 `projects/.../assets/...` 是远程 asset 名，不是本地路径，因此保留在 `.js` 导出脚本中。
 
-## 6. 研究进展(截至 2026-07-16)
+## Limitations And Future Work
 
-- ✅ 完成全部特征数据准备(社会经济 / 人类活动与建成环境 / 地理与环境三大块)
-- ✅ 跑通 GNN(GraphSAGE)与 MLP 两套解码器的自预测:多数城市 self-prediction 收敛并取得正 R²,**AEF 具备人口预测能力**
-- ✅ 获得 GNN / MLP 的 15×15 跨城迁移矩阵,并完成域偏移归因
+当前结论支持 AEF 在人口预测中的表征价值，但也显示跨城市迁移存在明显 domain adaptation 问题。后续可沿三个方向继续推进：
 
-GNN 跨城迁移矩阵(校准后,行=源城、列=目标城;左=全量,右=剔除 IQR 异常后,白色为异常对):
-
-![GNN 迁移矩阵](figures/transfer_matrix_gnn.png)
-
-**归因分析主要结论**(详见 `model/Analysis/README.md`,源自《实验方案记录》1.1–1.6):
-
-| # | 分析 | 结论 |
-|---|------|------|
-| 1.1 | 解码器退化(Ridge vs GNN) | Ridge 迁移更差 → 图结构信息对迁移有正向作用,复杂解码器非负迁移主因 |
-| 1.2 | 零模型(打乱特征) | 仍出现大负值 → 模型存在**源域均值锚定的输出偏置** |
-| 1.3–1.4 | 均值校准 + IQR 异常剔除 | 校准并剔除 16 对(8.2%)异常后,真实 GNN 迁移均值由 −0.355 回升至 **+0.286**;异常集中于目标域 Oklahoma/Jackson_MS/Montgomery、源域 Duluth/losangeles |
-| 1.5–1.6 | 域偏移定量回归 | 嵌入 **L2 距离每增 1 单位,校准 R² 平均下降 0.019**(p<0.001,R²=0.109;Spearman ρ=−0.334)。基线斜率 β₀=−0.0189 作为后续 GIS 辅助特征缓解域偏移的参照 |
-
-L2 嵌入距离 → 校准后迁移 R² 的回归(左=散点+线性拟合,右=分箱趋势):
-
-![域偏移量化回归](figures/domain_shift_L2.png)
-
-**下一步:** 引入 GIS 辅助特征(如海拔 / 建成用地 / 交通 POI,见 `model/AEF_plus_GIS/`)量化域偏移缓解效果;按高/中/低特征距离选 MSA 做外部验证(任务三)。
+1. 从空间迁移扩展到时空迁移：结合多时相 AEF 与人口数据，评价不同年份和城市发展阶段的动态迁移能力。
+2. 从现象解释走向机制建模：引入 domain adaptation、因果推断或层次模型，刻画城市间 AEF-population 响应关系差异。
+3. 从迁移评价走向应用策略：构建结合表征相似性、人口差异和 concept-shift 风险的源域选择与目标域适配框架。

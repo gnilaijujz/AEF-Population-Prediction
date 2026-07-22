@@ -1,0 +1,7 @@
+FEATURE: inter_intra_ratio
+OLD_TARGET_COL: avg_CDS
+NEW_TARGET_COL: avg_CDS_old
+IQR_MULTIPLIER: 100000
+Old cities (original): 15
+Old cities (after IQR): 15
+New cities: 12

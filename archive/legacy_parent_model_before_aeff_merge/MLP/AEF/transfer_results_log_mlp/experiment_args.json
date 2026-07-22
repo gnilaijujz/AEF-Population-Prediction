@@ -1,0 +1,23 @@
+{
+  "input_mode": "aef",
+  "input_root": "archive\\legacy_parent_model_before_aeff_merge\\MLP\\AEF\\MLP_input",
+  "input_feature": "poi_trans",
+  "aef_root": "model_data/aef_root/clean_aef_shapefiles",
+  "pop_csv": "data_sources\\msa_reference\\raw_msa_data\\ACSDT5Y2020.pop\\ACSDT5Y2020.B01003-Data.csv",
+  "pretrained_dir": "model_data\\pretrained_models\\mlp",
+  "out_dir": "archive\\legacy_parent_model_before_aeff_merge\\MLP\\AEF\\transfer_results_log_mlp",
+  "cities": null,
+  "source_cities": null,
+  "target_cities": null,
+  "ridge": false,
+  "ridge_alpha": 1.0,
+  "null_model": false,
+  "null_seed": 123,
+  "hidden_channels": 64,
+  "dropout": 0.5,
+  "train_ratio": 0.7,
+  "target_transform": "log1p",
+  "seed": 42,
+  "cpu": false,
+  "calibrate_mean": false
+}

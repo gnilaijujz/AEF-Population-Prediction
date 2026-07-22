@@ -1,0 +1,35 @@
+                            OLS Regression Results                            
+==============================================================================
+Dep. Variable:                avg_CDS   R-squared:                       0.165
+Model:                            OLS   Adj. R-squared:                  0.101
+Method:                 Least Squares   F-statistic:                     2.566
+Date:                Tue, 21 Jul 2026   Prob (F-statistic):              0.133
+Time:                        19:05:06   Log-Likelihood:                 14.031
+No. Observations:                  15   AIC:                            -24.06
+Df Residuals:                      13   BIC:                            -22.65
+Df Model:                           1                                         
+Covariance Type:            nonrobust                                         
+===================================================================================
+                      coef    std err          t      P>|t|      [0.025      0.975]
+-----------------------------------------------------------------------------------
+const              -0.2876      0.246     -1.167      0.264      -0.820       0.245
+pca_5_explained     0.4756      0.297      1.602      0.133      -0.166       1.117
+==============================================================================
+Omnibus:                        6.834   Durbin-Watson:                   2.067
+Prob(Omnibus):                  0.033   Jarque-Bera (JB):                3.617
+Skew:                           1.067   Prob(JB):                        0.164
+Kurtosis:                       4.112   Cond. No.                         19.0
+==============================================================================
+
+Notes:
+[1] Standard Errors assume that the covariance matrix of the errors is correctly specified.
+
+Regression equation: avg_CDS = 0.475578 * pca_5_explained + -0.287552
+RMSE on new cities: 0.2017
+MAE on new cities:  0.1607
+Pearson correlation: 0.1617
+Q² (external R²): -1.3625
+Calibration slope: NaN (ideal=1)
+Calibration intercept: NaN (ideal=0)
+Bias: 0.1547
+Generalization gap (Train R² - Q²): 1.5273

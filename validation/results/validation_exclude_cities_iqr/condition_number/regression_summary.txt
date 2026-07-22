@@ -1,0 +1,39 @@
+                            OLS Regression Results                            
+==============================================================================
+Dep. Variable:                avg_CDS   R-squared:                       0.028
+Model:                            OLS   Adj. R-squared:                 -0.047
+Method:                 Least Squares   F-statistic:                    0.3745
+Date:                Wed, 22 Jul 2026   Prob (F-statistic):              0.551
+Time:                        09:21:51   Log-Likelihood:                 12.893
+No. Observations:                  15   AIC:                            -21.79
+Df Residuals:                      13   BIC:                            -20.37
+Df Model:                           1                                         
+Covariance Type:            nonrobust                                         
+====================================================================================
+                       coef    std err          t      P>|t|      [0.025      0.975]
+------------------------------------------------------------------------------------
+const                0.0421      0.106      0.396      0.699      -0.188       0.272
+condition_number  1.582e-09   2.58e-09      0.612      0.551      -4e-09    7.17e-09
+==============================================================================
+Omnibus:                        2.584   Durbin-Watson:                   2.526
+Prob(Omnibus):                  0.275   Jarque-Bera (JB):                0.854
+Skew:                           0.514   Prob(JB):                        0.652
+Kurtosis:                       3.556   Cond. No.                     1.54e+08
+==============================================================================
+
+Notes:
+[1] Standard Errors assume that the covariance matrix of the errors is correctly specified.
+[2] The condition number is large, 1.54e+08. This might indicate that there are
+strong multicollinearity or other numerical problems.
+
+Regression equation: avg_CDS = 0.000000 * condition_number + 0.042094
+Excluded new cities: ['Las_Vegas', 'Syracuse_NY']
+IQR multiplier: 1.5
+RMSE on remaining new cities: 0.1905
+MAE on remaining new cities:  0.1416
+Pearson correlation: -0.4757
+Q^2 (external R^2): -1.7971
+Calibration slope: -2.2110 (ideal=1)
+Calibration intercept: 0.1961 (ideal=0)
+Bias: 0.1416
+Generalization gap (Train R^2 - Q^2): 1.8252

@@ -1,0 +1,15 @@
+{
+  "aef_root": "model_data/aef_root/clean_aef_shapefiles",
+  "pop_csv": "data_sources\\msa_reference\\raw_msa_data\\ACSDT5Y2020.pop\\ACSDT5Y2020.B01003-Data.csv",
+  "pretrained_dir": "model_data\\pretrained_models\\GNN\\pretrained_aef",
+  "out_dir": "results/transfer_results/aef",
+  "cities": null,
+  "source_cities": null,
+  "target_cities": null,
+  "save_pair_outputs": false,
+  "target_transform": "log1p",
+  "hidden_channels": 64,
+  "dropout": 0.5,
+  "allow_missing_scaler": false,
+  "cpu": false
+}

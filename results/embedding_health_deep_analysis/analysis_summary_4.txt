@@ -1,0 +1,117 @@
+总样本数: 15
+异常城市: ['Duluth', 'newyork'] (邻居一致性值: [1.28193277e-01 2.02388181e+07])
+剔除后样本数: 13
+
+============================================================
+1. 回归分析
+============================================================
+
+--- 原始数据 ---
+R² = 0.2707, p = 0.0468
+斜率 = -0.0000
+
+--- 剔除异常后 ---
+R² = 0.7741, p = 0.0001
+斜率 = 4.6815
+
+--- 对数变换 (剔除异常后) ---
+R² = 0.7724, p = 0.0001
+斜率 = 4.8343
+
+============================================================
+2. 偏相关分析 (控制 n_nodes)
+============================================================
+偏相关系数 (控制 n_nodes): r = 0.8459, p = 0.0003
+
+============================================================
+3. t检验：好老师 vs 差老师
+============================================================
+好老师 (n=3): 均值=0.0088, 标准差=0.0034
+差老师 (n=3): 均值=0.0524, 标准差=0.0150
+t = -4.9161, p = 0.0080
+
+============================================================
+4. 二次项检验
+============================================================
+                            OLS Regression Results                            
+==============================================================================
+Dep. Variable:                avg_CDS   R-squared:                       0.786
+Model:                            OLS   Adj. R-squared:                  0.744
+Method:                 Least Squares   F-statistic:                     18.41
+Date:                Sun, 19 Jul 2026   Prob (F-statistic):           0.000445
+Time:                        07:41:27   Log-Likelihood:                 22.240
+No. Observations:                  13   AIC:                            -38.48
+Df Residuals:                      10   BIC:                            -36.79
+Df Model:                           2                                         
+Covariance Type:            nonrobust                                         
+========================================================================================
+                           coef    std err          t      P>|t|      [0.025      0.975]
+----------------------------------------------------------------------------------------
+const                    0.0270      0.042      0.641      0.536      -0.067       0.121
+neighbor_consistency     2.3973      3.107      0.772      0.458      -4.526       9.321
+cons_sq                 33.5726     44.217      0.759      0.465     -64.949     132.094
+==============================================================================
+Omnibus:                        0.223   Durbin-Watson:                   2.366
+Prob(Omnibus):                  0.894   Jarque-Bera (JB):                0.404
+Skew:                          -0.046   Prob(JB):                        0.817
+Kurtosis:                       2.142   Cond. No.                     3.21e+03
+==============================================================================
+
+Notes:
+[1] Standard Errors assume that the covariance matrix of the errors is correctly specified.
+[2] The condition number is large, 3.21e+03. This might indicate that there are
+strong multicollinearity or other numerical problems.
+二次项不显著，关系近似线性
+Updated R2_self from results/transferability/AEF/full_scores_robust.csv
+
+Correlation with avg_CDS:
+avg_CDS                 1.000000
+R2_self                 0.816267
+pca_5_explained         0.406016
+inter_intra_ratio       0.373189
+isotropy               -0.130436
+effective_rank         -0.307695
+neighbor_consistency   -0.520247
+n_nodes                -0.682587
+Name: avg_CDS, dtype: float64
+
+Univariate regression results (predicting avg_CDS):
+                 Metric  Coefficient   P_value        R2    Adj_R2
+5               n_nodes    -0.070924  0.005046  0.465925  0.424842
+0  neighbor_consistency    -0.054056  0.046804  0.270657  0.214553
+4       pca_5_explained     0.042187  0.133189  0.164849  0.100607
+3     inter_intra_ratio     0.038776  0.170663  0.139270  0.073060
+1        effective_rank    -0.031971  0.264570  0.094676  0.025036
+2              isotropy    -0.013553  0.643123  0.017013 -0.058601
+
+Multivariate regression summary:
+                            OLS Regression Results                            
+==============================================================================
+Dep. Variable:                avg_CDS   R-squared:                       0.532
+Model:                            OLS   Adj. R-squared:                  0.181
+Method:                 Least Squares   F-statistic:                     1.516
+Date:                Sun, 19 Jul 2026   Prob (F-statistic):              0.286
+Time:                        07:28:27   Log-Likelihood:                 18.376
+No. Observations:                  15   AIC:                            -22.75
+Df Residuals:                       8   BIC:                            -17.80
+Df Model:                           6                                         
+Covariance Type:            nonrobust                                         
+========================================================================================
+                           coef    std err          t      P>|t|      [0.025      0.975]
+----------------------------------------------------------------------------------------
+const                    0.1048      0.025      4.172      0.003       0.047       0.163
+neighbor_consistency     0.0502      0.067      0.754      0.473      -0.103       0.204
+effective_rank           0.0056      0.100      0.056      0.957      -0.226       0.237
+isotropy                -0.0188      0.043     -0.432      0.677      -0.119       0.081
+inter_intra_ratio       -0.0064      0.059     -0.109      0.916      -0.142       0.130
+pca_5_explained         -0.0150      0.125     -0.120      0.908      -0.304       0.274
+n_nodes                 -0.1306      0.079     -1.657      0.136      -0.312       0.051
+==============================================================================
+Omnibus:                       11.032   Durbin-Watson:                   0.425
+Prob(Omnibus):                  0.004   Jarque-Bera (JB):                7.154
+Skew:                           1.469   Prob(JB):                       0.0280
+Kurtosis:                       4.678   Cond. No.                         12.6
+==============================================================================
+
+Notes:
+[1] Standard Errors assume that the covariance matrix of the errors is correctly specified.

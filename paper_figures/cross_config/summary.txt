@@ -1,0 +1,17 @@
+Cross-configuration ranking analysis complete.
+Number of configurations: 11
+Number of common cities: 15
+
+Average ranking correlations (Spearman):
+AEF+NDVI    0.914286
+AEF+SLP     0.913312
+AEF+POId    0.901948
+AEF+IMP     0.900325
+AEF+WAT     0.898701
+AEF+ROAD    0.885714
+AEF+BLD     0.882143
+AEF+9GIS    0.851299
+AEF+NTL     0.847727
+AEF         0.844156
+PureGIS     0.774026
+dtype: float64

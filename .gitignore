@@ -13,6 +13,12 @@
 *.xls
 *.xlsx
 
+# ---- GitHub 项目说明材料 ----
+# 最终结题报告和 docs/report_materials 下的汇报归档需要同步到仓库。
+!结题.pptx
+!docs/report_materials/*.pptx
+!docs/report_materials/*.docx
+
 # ---- 原始 MSA 数据(边界矢量 / census 原始下载) ----
 MSA/MSA原始数据/
 
@@ -78,6 +84,7 @@ desktop.ini
 
 # ---- 工具配置(非项目内容) ----
 .claude/
+.vscode/
 
 # ---- data_AEF / data_GIS:整体入库(per-MSA AEF/GIS 数据 + 边界 shapefile) ----
 # 覆盖上面按扩展名的忽略规则,把这两个目录整体放行
